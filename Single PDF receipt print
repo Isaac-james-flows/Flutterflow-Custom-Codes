@@ -1,0 +1,222 @@
+// Automatic FlutterFlow imports
+import '/backend/schema/structs/index.dart';
+import '/backend/supabase/supabase.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/actions/index.dart';
+import '/flutter_flow/custom_functions.dart';
+import 'package:flutter/material.dart';
+// Begin custom action code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+
+Future<bool> generateMultipleReceipts(
+  String receivedFrom,
+  String amount,
+  String paymentFor,
+  String paymentMethod,
+  String? chequeNo,
+  DateTime date,
+) async {
+  try {
+    final pdf = pw.Document();
+    
+    // Create a single receipt widget
+    pw.Widget buildReceipt() {
+      return pw.Container(
+        decoration: pw.BoxDecoration(
+          border: pw.Border.all(width: 0.5),
+        ),
+        padding: const pw.EdgeInsets.all(10),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            // Company Header
+            pw.Center(
+              child: pw.Column(
+                children: [
+                  pw.Text(
+                    'SDK FOUNDATIONS',
+                    style: pw.TextStyle(
+                      fontSize: 10,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 2),
+                  pw.Text(
+                    '123 Business Street, City',
+                    style: pw.TextStyle(fontSize: 6),
+                  ),
+                ],
+              ),
+            ),
+            
+            pw.SizedBox(height: 8),
+            
+            // Receipt Header
+            pw.Container(
+              width: 40,
+              padding: const pw.EdgeInsets.symmetric(vertical: 2, horizontal: 5),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.blue900,
+                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
+              ),
+              child: pw.Text(
+                'Receipt',
+                style: pw.TextStyle(
+                  color: PdfColors.white,
+                  fontSize: 8,
+                ),
+              ),
+            ),
+            
+            pw.SizedBox(height: 8),
+            
+            // Date
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.end,
+              children: [
+                pw.Text(
+                  'Date: ${DateFormat('yyyy-MM-dd').format(date)}',
+                  style: pw.TextStyle(fontSize: 6),
+                ),
+              ],
+            ),
+            
+            pw.SizedBox(height: 8),
+            
+            // Receipt Details
+            pw.Text('Received from: $receivedFrom', style: pw.TextStyle(fontSize: 8)),
+            pw.SizedBox(height: 4),
+            pw.Text('The sum of: $amount', style: pw.TextStyle(fontSize: 8)),
+            pw.SizedBox(height: 4),
+            pw.Text('Being Payment: $paymentFor', style: pw.TextStyle(fontSize: 8)),
+            
+            pw.SizedBox(height: 8),
+            
+            // Payment Method
+            pw.Row(
+              children: [
+                pw.Row(
+                  children: [
+                    pw.Container(
+                      width: 8,
+                      height: 8,
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(width: 0.5),
+                      ),
+                      child: paymentMethod == 'Cash' 
+                        ? pw.Center(child: pw.Text('✓', style: pw.TextStyle(fontSize: 6)))
+                        : null,
+                    ),
+                    pw.SizedBox(width: 2),
+                    pw.Text('Cash', style: pw.TextStyle(fontSize: 8)),
+                    
+                    pw.SizedBox(width: 10),
+                    
+                    pw.Container(
+                      width: 8,
+                      height: 8,
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(width: 0.5),
+                      ),
+                      child: paymentMethod == 'Cheque'
+                        ? pw.Center(child: pw.Text('✓', style: pw.TextStyle(fontSize: 6)))
+                        : null,
+                    ),
+                    pw.SizedBox(width: 2),
+                    pw.Text('Cheque', style: pw.TextStyle(fontSize: 8)),
+                  ],
+                ),
+                if (chequeNo != null && chequeNo.isNotEmpty) ...[
+                  pw.SizedBox(width: 10),
+                  pw.Text('Cheque No: $chequeNo', style: pw.TextStyle(fontSize: 8)),
+                ],
+              ],
+            ),
+            
+            pw.Spacer(),
+            
+            // Amount and Signature
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(2),
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(width: 0.5),
+                  ),
+                  child: pw.Row(
+                    children: [
+                      pw.Text('₦', style: pw.TextStyle(fontSize: 8)),
+                      pw.SizedBox(width: 2),
+                      pw.Text(amount, style: pw.TextStyle(fontSize: 8)),
+                    ],
+                  ),
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Container(
+                      width: 60,
+                      height: 0.5,
+                      color: PdfColors.black,
+                    ),
+                    pw.Text("Director's Sign.", style: pw.TextStyle(fontSize: 6)),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            children: [
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Expanded(child: buildReceipt()),
+                  pw.SizedBox(width: 10),
+                  pw.Expanded(child: buildReceipt()),
+                  pw.SizedBox(width: 10),
+                  pw.Expanded(child: buildReceipt()),
+                ],
+              ),
+              pw.SizedBox(height: 10),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Expanded(child: buildReceipt()),
+                  pw.SizedBox(width: 10),
+                  pw.Expanded(child: buildReceipt()),
+                  pw.SizedBox(width: 10),
+                  pw.Expanded(child: buildReceipt()),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    // Print the document
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+    
+    return true;
+    
+  } catch (e) {
+    print('Error generating PDF: $e');
+    return false;
+  }
+}
