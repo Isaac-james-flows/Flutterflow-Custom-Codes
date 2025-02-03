@@ -14,12 +14,41 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 Future<void> blockUser(String blockedByUserID, String blockedUserID) async {
   final supabase = Supabase.instance.client;
 
-  await supabase.from('blocked_users').insert({
-    'id': blockedByUserID,
-    'blocked_user_id': blockedUserID,
-  });
-}
-// Set your action name, define your arguments (blockedByUserID {string}, blockedUserID {string}) and return parameter,
-// and then add the boilerplate code using the green button on the right!
+  try {
+    // First, let's check if this user already has a list of blocked users
+    final existing = await supabase
+        .from('blocked_users')
+        .select('blocked_user_id') // We only need the array of blocked users
+        .eq('id', blockedByUserID) // Find the record for our user
+        .maybeSingle(); // This handles the case where no record exists yet
 
-//dependencies "package_info_plus: ^8.0.2"
+    if (existing != null) {
+      // If user already has blocked users, let's get their current list
+      List<String> currentBlocked =
+          List<String>.from(existing['blocked_user_id'] ?? []);
+
+      // Only add the new blocked user if they're not already blocked
+      if (!currentBlocked.contains(blockedUserID)) {
+        // Add the new user to the list
+        currentBlocked.add(blockedUserID);
+
+        // Update the existing record with the new list
+        await supabase.from('blocked_users').update({
+          'blocked_user_id': currentBlocked, // Send the whole array back
+        }).eq('id', blockedByUserID);
+      }
+    } else {
+      // If this is the first time blocking someone, create a new record
+      await supabase.from('blocked_users').insert({
+        'id': blockedByUserID,
+        'blocked_user_id': [
+          blockedUserID
+        ], // Create a new array with first blocked user
+      });
+    }
+  } catch (e) {
+    // Always good to handle errors gracefully
+    print('Error in blockUser: $e');
+    rethrow; // This allows the calling code to handle the error
+  }
+}
